@@ -12,7 +12,6 @@ from flask import Flask, render_template, request
 import logging
 logging.basicConfig(level=logging.INFO )
 
-application = Flask(__name__)
 
 import nytimesarticle as nyt
 
@@ -20,6 +19,9 @@ import Util
 
 API_QUERY_RATE = 5 # per second
 NYT_CACHE = './nyt-dir.cache'
+
+if __name__ == '__main__':
+    application = Flask(__name__)
 
 class NytApi():
     def __init__(self, accountKey=None):
@@ -68,8 +70,8 @@ class NewsBubble():
         self.logger = logging.getLogger(self.__class__.__name__)
         self.logger.info(self.__class__.__name__+'Initialised')
 
-    def getWords(self,sd, ed, query_word, num_pages=5):
-        self.logger.info('getWords'+str(sd, ed, query_word, num_pages))
+    def getWords(self,sd, ed, query_word, num_pages=1):
+        self.logger.info('getWords'+str((sd, ed, query_word, num_pages)))
         cache_key = str((sd, ed, query_word, num_pages))
         if(not self.cache.has_key(cache_key)):
             all_articles = []
@@ -83,8 +85,8 @@ class NewsBubble():
             self.cache[cache_key] = words2
         return self.cache[cache_key]
 
-    def makeCloud(self,sd, ed, query_word, num_pages=5, save=True):
-        self.logger.info('makeCloud'+str(sd, ed, query_word, num_pages, save))
+    def makeCloud(self,sd, ed, query_word, num_pages=1, save=True):
+        self.logger.info('makeCloud'+str((sd, ed, query_word, num_pages, save)))
         words = self.getWords(sd, ed, query_word, num_pages)
         wc = self.wcf.generate(' '.join(words))
         wci = wc.to_image()
@@ -117,7 +119,8 @@ def main(querystring):
     print link
     return render_template('image.html', image=link)
 
-app=NewsBubble()
 
 if __name__ == '__main__':
-    application.run()
+    app=NewsBubble()
+    application.run(host='0.0.0.0')
+
