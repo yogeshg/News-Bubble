@@ -121,8 +121,13 @@ def main(querystring):
             string = string + "{text: \"" + str(k) + "\", weight:"+ str(v) + "}"
         else:
             string = string + ",{text: \"" + str(k) + "\", weight:"+ str(v) + "}"
+    string+="]"
+    freq2 = []
+    for k,v in freq.iteritems():
+        freq2.append({'text':k, 'weight':v})
+    string = json.dumps(freq2)
     print string
-    return render_template('index.html', freq=string + "]")
+    return render_template('index.html', freq=string)
 
 if __name__ == '__main__':
     app=NewsBubble()
