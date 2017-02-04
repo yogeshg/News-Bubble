@@ -5,6 +5,8 @@ import re
 import nltk
 import urlparse
 from wordcloud import WordCloud
+from collections import Counter
+
 # import matplotlib.pyplot as plt
 from PIL import Image
 from flask import Flask, render_template, request
@@ -109,16 +111,9 @@ def main(querystring):
     sd = int(querystring.split('&')[0].split('begin_date=')[1])
     ed = int(querystring.split('&')[1].split('end_date=')[1])
     query_word = str(querystring.split('&')[2].split('q=')[1])
-    # sd = urlparse.parse_qs(parsed.query)['begin_date']
-    # ed = urlparse.parse_qs(parsed.query)['end_date']
-    # query_word = urlparse.parse_qs(parsed.query)['q']
-    app.makeCloud(sd, ed, query_word)
-    cache_key = str((sd, ed, query_word, 5))
-    link = "/static/" + Util.fsSafeString(cache_key)+'.png'
-    link = "<img src = \"" + link + "\" />"
-    print link
-    return render_template('image.html', image=link)
-
+    words = app.getWords(sd, ed, query_word)
+    freq = dict(Counter(words))
+    return render_template('image.html', freq=freq)
 
 if __name__ == '__main__':
     app=NewsBubble()
