@@ -19,7 +19,7 @@ import nytimesarticle as nyt
 import Util
 
 API_QUERY_RATE = 5 # per second
-NYT_CACHE = './nyt.cache'
+NYT_CACHE = './nyt-dir.cache'
 
 class NytApi():
     def __init__(self, accountKey=None):
@@ -28,7 +28,7 @@ class NytApi():
                 accountKey = f.readline().strip()
         self.logger = logging.getLogger(self.__class__.__name__)
         self.logger.info(self.__class__.__name__+'Initialised')
-        self.cache = Util.FileDict(NYT_CACHE)
+        self.cache = Util.DirDict(NYT_CACHE, valueDumper=json.dumps, valueLoader=json.loads)
         self.api = nyt.articleAPI(accountKey)
         self.API_FIELDS = ['headline', 'pub_date', 'abstract', 'snippet', 'lead_paragraph']
 
