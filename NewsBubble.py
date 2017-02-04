@@ -10,7 +10,7 @@ from PIL import Image
 from flask import Flask, render_template, request
 
 import logging
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO )
 
 application = Flask(__name__)
 
@@ -33,23 +33,24 @@ class NytApi():
         self.API_FIELDS = ['headline', 'pub_date', 'abstract', 'snippet', 'lead_paragraph']
 
     def search(self, date, query_word='president', num_pages=5):
-        cache_key = str( (date, query_word, num_pages) )
-        if(not self.cache.has_key(cache_key)):
-            all_articles = []
-            for i in range(num_pages):
-                result = self.api.search(  q=query_word,
-                            begin_date=date,
-                            fl=self.API_FIELDS,
-                            sort='oldest',
-                            page=i )
-                time.sleep(4 * 1.0/API_QUERY_RATE)
-                self._last_result = result
-                try:
-                    all_articles.extend(result['response']['docs'])
-                except Exception, e:
-                    self.logger.exception(e)
-            self.cache[cache_key] = all_articles
-        return self.cache[cache_key]
+        all_articles = []
+        try:
+            cache_key = str( (date, query_word, num_pages) )
+            if(not self.cache.has_key(cache_key)):
+                for i in range(num_pages):
+                    result = self.api.search(q=query_word, begin_date=date, fl=self.API_FIELDS, sort='oldest', page=i )
+                    time.sleep(4 * 1.0/API_QUERY_RATE)
+                    self._last_result = result
+                    try:
+                        all_articles.extend(result['response']['docs'])
+                    except Exception, e:
+                        self.logger.exception(e)
+                        self.logger.exception(str(self._last_result))
+                self.cache[cache_key] = all_articles
+            all_articles = self.cache[cache_key]
+        except Exception as e:
+            self.logger.exception( e )
+        return all_articles
 
 PS = nltk.stem.PorterStemmer()
 NORMALIZE = lambda w: PS.stem(w.strip()).lower()
@@ -64,8 +65,11 @@ class NewsBubble():
 
         self.text = []
         self.words = []
+        self.logger = logging.getLogger(self.__class__.__name__)
+        self.logger.info(self.__class__.__name__+'Initialised')
 
     def getWords(self,sd, ed, query_word, num_pages=5):
+        self.logger.info('getWords'+str(sd, ed, query_word, num_pages))
         cache_key = str((sd, ed, query_word, num_pages))
         if(not self.cache.has_key(cache_key)):
             all_articles = []
@@ -80,12 +84,15 @@ class NewsBubble():
         return self.cache[cache_key]
 
     def makeCloud(self,sd, ed, query_word, num_pages=5, save=True):
+        self.logger.info('makeCloud'+str(sd, ed, query_word, num_pages, save))
         words = self.getWords(sd, ed, query_word, num_pages)
         wc = self.wcf.generate(' '.join(words))
         wci = wc.to_image()
         if(save):
             cache_key = str((sd, ed, query_word, num_pages))
-            wci.save('static/'+Util.fsSafeString(cache_key)+'.png', format='png')
+            img_file='static/'+Util.fsSafeString(cache_key)+'.png'
+            logging.info('saving... '+img_file)
+            wci.save( img_file , format='png')
         return wci
 
 @application.route('/')
@@ -94,25 +101,23 @@ def default():
 
 @application.route('/search/<querystring>')
 # @application.route('/')
+
 def main(querystring):
-    print 'reached'
     parsed = urlparse.urlparse(querystring)
     sd = int(querystring.split('&')[0].split('begin_date=')[1])
     ed = int(querystring.split('&')[1].split('end_date=')[1])
     query_word = str(querystring.split('&')[2].split('q=')[1])
-    print 'hi'
     # sd = urlparse.parse_qs(parsed.query)['begin_date']
     # ed = urlparse.parse_qs(parsed.query)['end_date']
     # query_word = urlparse.parse_qs(parsed.query)['q']
-    app=NewsBubble()
-    print 'hi1'
     app.makeCloud(sd, ed, query_word)
-    print 'hi2'
     cache_key = str((sd, ed, query_word, 5))
     link = "/static/" + Util.fsSafeString(cache_key)+'.png'
     link = "<img src = \"" + link + "\" />"
     print link
     return render_template('image.html', image=link)
+
+app=NewsBubble()
 
 if __name__ == '__main__':
     application.run()
