@@ -3,14 +3,16 @@ import json
 import requests
 import re
 import nltk
+import urlparse
 from wordcloud import WordCloud
 # import matplotlib.pyplot as plt
 from PIL import Image
+from flask import Flask, render_template, request
 
 import logging
 logging.basicConfig(level=logging.DEBUG)
 
-
+application = Flask(__name__)
 
 import nytimesarticle as nyt
 
@@ -83,6 +85,34 @@ class NewsBubble():
         wci = wc.to_image()
         if(save):
             cache_key = str((sd, ed, query_word, num_pages))
-            wci.save('./imgs/'+Util.fsSafeString(cache_key)+'.png', format='png')
+            wci.save('static/'+Util.fsSafeString(cache_key)+'.png', format='png')
         return wci
 
+@application.route('/')
+def default():
+    return render_template('index.html')
+
+@application.route('/search/<querystring>')
+# @application.route('/')
+def main(querystring):
+    print 'reached'
+    parsed = urlparse.urlparse(querystring)
+    sd = int(querystring.split('&')[0].split('begin_date=')[1])
+    ed = int(querystring.split('&')[1].split('end_date=')[1])
+    query_word = str(querystring.split('&')[2].split('q=')[1])
+    print 'hi'
+    # sd = urlparse.parse_qs(parsed.query)['begin_date']
+    # ed = urlparse.parse_qs(parsed.query)['end_date']
+    # query_word = urlparse.parse_qs(parsed.query)['q']
+    app=NewsBubble()
+    print 'hi1'
+    app.makeCloud(sd, ed, query_word)
+    print 'hi2'
+    cache_key = str((sd, ed, query_word, 5))
+    link = "/static/" + Util.fsSafeString(cache_key)+'.png'
+    link = "<img src = \"" + link + "\" />"
+    print link
+    return render_template('image.html', image=link)
+
+if __name__ == '__main__':
+    application.run()
