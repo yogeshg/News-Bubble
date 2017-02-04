@@ -105,15 +105,15 @@ def default():
 
 @application.route('/search/<querystring>')
 # @application.route('/')
-
 def main(querystring):
+    print 'reached'
     parsed = urlparse.urlparse(querystring)
     sd = int(querystring.split('&')[0].split('begin_date=')[1])
     ed = int(querystring.split('&')[1].split('end_date=')[1])
     query_word = str(querystring.split('&')[2].split('q=')[1])
     words = app.getWords(sd, ed, query_word)
     freq = dict(Counter(words))
-    return render_template('image.html', freq=freq)
+    return render_template('index.html', freq=json.dumps(freq)) 
 
 if __name__ == '__main__':
     app=NewsBubble()
