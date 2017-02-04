@@ -101,7 +101,7 @@ class NewsBubble():
 
 @application.route('/')
 def default():
-    return render_template('index.html')
+    return render_template('index.html', freq='[]')
 
 @application.route('/search/<querystring>')
 # @application.route('/')
@@ -113,7 +113,16 @@ def main(querystring):
     query_word = str(querystring.split('&')[2].split('q=')[1])
     words = app.getWords(sd, ed, query_word)
     freq = dict(Counter(words))
-    return render_template('index.html', freq=json.dumps(freq)) 
+    string = "["
+    first = True
+    for k,v in freq.iteritems():
+        if first:
+            first = False
+            string = string + "{text: \"" + str(k) + "\", weight:"+ str(v) + "}"
+        else:
+            string = string + ",{text: \"" + str(k) + "\", weight:"+ str(v) + "}"
+    print string
+    return render_template('index.html', freq=string + "]")
 
 if __name__ == '__main__':
     app=NewsBubble()

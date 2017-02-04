@@ -78,8 +78,10 @@ body,h1,h2,h3,h4,h5,h6 {font-family: "Raleway", sans-serif}
 
 
 <script>
-
 $( document ).ready(function() {
+  var words = {{ freq }};
+  $('#display').jQCloud(words);
+
   $( "#submit" ).click(function() {
       var url = "/search/" + 'begin_date=' + $("#startdate").val() + '&end_date=' + $("#enddate").val() + '&q=' + $("#q").val();
       console.log(url);
