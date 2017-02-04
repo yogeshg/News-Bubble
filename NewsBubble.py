@@ -74,7 +74,7 @@ class NewsBubble():
 
     def getWords(self,sd, ed, query_word, num_pages=1):
         self.logger.info('getWords'+str((sd, ed, query_word, num_pages)))
-        cache_key = str((sd, ed, query_word, num_pages))
+        cache_key = self.getCacheKey(sd, ed, query_word, num_pages)
         if(not self.cache.has_key(cache_key)):
             all_articles = []
             for d in range(sd, ed):
@@ -87,47 +87,48 @@ class NewsBubble():
             self.cache[cache_key] = words2
         return self.cache[cache_key]
 
+    def getCacheKey(self, sd, ed, query_word, num_pages):
+        return str((sd, ed, query_word, num_pages))
+
+    def getImagePath(self, sd, ed, query_word, num_pages):
+        cache_key = self.getCacheKey(sd, ed, query_word, num_pages)
+        img_file='static/'+Util.fsSafeString(cache_key)+'.png'
+        return img_file
+
     def makeCloud(self,sd, ed, query_word, num_pages=1, save=True):
         self.logger.info('makeCloud'+str((sd, ed, query_word, num_pages, save)))
         words = self.getWords(sd, ed, query_word, num_pages)
         wc = self.wcf.generate(' '.join(words))
         wci = wc.to_image()
         if(save):
-            cache_key = str((sd, ed, query_word, num_pages))
-            img_file='static/'+Util.fsSafeString(cache_key)+'.png'
+            img_file = self.getImagePath(sd, ed, query_word, num_pages)
             logging.info('saving... '+img_file)
             wci.save( img_file , format='png')
-        return wci
+        return words
 
 @application.route('/')
 def default():
-    return render_template('index.html', freq='[]')
+    return render_template('index.html', start=20161101, end=20161108, query='president', img='i1', freq='[]')
 
-@application.route('/search/<querystring>')
+@application.route('/search')
 # @application.route('/')
-def main(querystring):
-    print 'reached'
-    parsed = urlparse.urlparse(querystring)
-    sd = int(querystring.split('&')[0].split('begin_date=')[1])
-    ed = int(querystring.split('&')[1].split('end_date=')[1])
-    query_word = str(querystring.split('&')[2].split('q=')[1])
-    words = app.getWords(sd, ed, query_word)
+def main():
+    user = request.args.get('user')
+    logging.info('querystring : '+str(request.args))
+    sd = int(request.args.get('begin_date'))
+    ed = int(request.args.get('end_date'))
+    qw = request.args.get('q')
+    np = int(request.args.get('np', 1))
+    app.makeCloud(sd, ed, qw, num_pages=np) # make async
+    words = []
     freq = dict(Counter(words))
-    string = "["
-    first = True
-    for k,v in freq.iteritems():
-        if first:
-            first = False
-            string = string + "{text: \"" + str(k) + "\", weight:"+ str(v) + "}"
-        else:
-            string = string + ",{text: \"" + str(k) + "\", weight:"+ str(v) + "}"
-    string+="]"
     freq2 = []
     for k,v in freq.iteritems():
         freq2.append({'text':k, 'weight':v})
     string = json.dumps(freq2)
     print string
-    return render_template('index.html', freq=string)
+    img_file = app.getImagePath(sd, ed, qw, np)
+    return render_template('index.html', start=sd, end=ed, query=qw, img=img_file, freq='[]')
 
 if __name__ == '__main__':
     app=NewsBubble()

@@ -33,16 +33,16 @@ body,h1,h2,h3,h4,h5,h6 {font-family: "Raleway", sans-serif}
 
   <form id="options">
   <div class="form-group">
-    <label for="email">Starting date: </label>
-    <input type="text" class="form-control" id="startdate">
+    <label for="start_date">Starting date: </label>
+    <input type="text" class="form-control" id="startdate" value={{start}}>
   </div>
   <div class="form-group">
-    <label for="pwd">Ending date: </label>
-    <input type="text" class="form-control" id="enddate">
+    <label for="end_date">Ending date: </label>
+    <input type="text" class="form-control" id="enddate" value={{end}}>
   </div>
    <div class="form-group">
-    <label for="pwd">Query term: </label>
-    <input type="text" class="form-control" id="q">
+    <label for="query">Query term: </label>
+    <input type="text" class="form-control" id="q" value={{query}}>
   </div>
   <button type="button" id="submit" class="btn btn-default">Submit</button>
 </form>
@@ -53,6 +53,7 @@ body,h1,h2,h3,h4,h5,h6 {font-family: "Raleway", sans-serif}
 
 <!-- !PAGE CONTENT! -->
 <div class="w3-main" style="margin-left:300px">
+  <img src={{img}}>
     <div id="display">
     </div>
 </div>
@@ -79,14 +80,14 @@ body,h1,h2,h3,h4,h5,h6 {font-family: "Raleway", sans-serif}
 
 <script>
 $( document ).ready(function() {
-  var words = {{ freq }};
-  console.log( words );
-  var words2 = JSON.parse(words);
-  console.log(words2);
-  $('#display').jQCloud(words);
+  // var words = {{ freq }};
+  // console.log( words );
+  // var words2 = JSON.parse(words);
+  // console.log(words2);
+  // $('#display').jQCloud(words);
 
   $( "#submit" ).click(function() {
-      var url = "/search/" + 'begin_date=' + $("#startdate").val() + '&end_date=' + $("#enddate").val() + '&q=' + $("#q").val();
+      var url = "/search?" + 'begin_date=' + $("#startdate").val() + '&end_date=' + $("#enddate").val() + '&q=' + $("#q").val();
       console.log(url);
       window.location.replace(url);
 });

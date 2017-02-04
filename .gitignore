@@ -1,6 +1,7 @@
 *.cache
 *.cache/
 imgs/
+static/*.png
 APIKEY.txt
 
 # https://raw.githubusercontent.com/github/gitignore/master/Python.gitignore
