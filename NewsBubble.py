@@ -4,7 +4,7 @@ import requests
 import re
 import nltk
 from wordcloud import WordCloud
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 from PIL import Image
 
 import logging
@@ -50,7 +50,7 @@ class NytApi():
         return self.cache[cache_key]
 
 PS = nltk.stem.PorterStemmer()
-NORMALIZE = lambda w: PS.stem_word(w.strip()).lower()
+NORMALIZE = lambda w: PS.stem(w.strip()).lower()
 STOPWORDS = [NORMALIZE(w) for w in open('stopwords.txt','r')]
 
 class NewsBubble():
@@ -83,6 +83,6 @@ class NewsBubble():
         wci = wc.to_image()
         if(save):
             cache_key = str((sd, ed, query_word, num_pages))
-            wci.save(Util.fsSafeString(cache_key)+'.png', format='png')
+            wci.save('./imgs/'+Util.fsSafeString(cache_key)+'.png', format='png')
         return wci
 
