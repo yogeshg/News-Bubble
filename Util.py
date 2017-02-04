@@ -4,6 +4,7 @@ import os
 import errno
 
 import re
+import json
 
 WORD_REGEX = re.compile(r'[\w]+')
 def fsSafeString( text ):
@@ -40,10 +41,12 @@ class FileDict(dict):
         return dict.__getitem__(self, i)
 
 class DirDict(FileDict):
-    def __init__(self, dirname, keyHasher=fsSafeString):
+    def __init__(self, dirname, keyHasher=fsSafeString, valueDumper=lambda x:x, valueLoader=lambda x:x):
         ensureDir(dirname)
         self.dirname = dirname
         self.keyHasher = keyHasher
+        self.valueDumper = valueDumper
+        self.valueLoader = valueLoader
         FileDict.__init__(self, os.path.join(self.dirname, '.keys2file') )
         self.reload()
 
@@ -54,7 +57,7 @@ class DirDict(FileDict):
         filename = self.keyHasher(key)
         FileDict.__setitem__( self, key, filename )
         with open( self.filePath( filename ), 'w' ) as f:
-            for l in content:
+            for l in self.valueDumper(content):
                 f.write(l)
             f.flush()
 
@@ -62,5 +65,5 @@ class DirDict(FileDict):
         filename = FileDict.__getitem__(self, key)
         with open( self.filePath( filename ), 'r' ) as f:
             r = "".join(f.readlines())
-        return r
+        return self.valueLoader(r)
 
