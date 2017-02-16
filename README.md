@@ -1,7 +1,7 @@
 # News-Bubble
 
 
-## How to run
+# How to run
 
 ``` bash
     pip install -r requirements.txt
